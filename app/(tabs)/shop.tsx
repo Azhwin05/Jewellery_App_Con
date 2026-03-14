@@ -14,9 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
-import { Spacing } from '../../constants/spacing';
+import { SerifFonts } from '../../constants/typography';
 import { ProductCard } from '../../components/product/ProductCard';
 import { SkeletonCard } from '../../components/ui/SkeletonLoader';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -88,29 +87,34 @@ export default function ShopScreen() {
 
   const ListHeader = (
     <View>
-      {/* Main category cards shown when no category selected */}
+      {/* 1. Horizontal "story" strip — shown when no category is active */}
       {!selectedCategory && (
-        <View style={styles.mainCats}>
-          {MAIN_CATEGORIES.map((cat) => (
+        <FlatList
+          data={MAIN_CATEGORIES}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(c) => c.id}
+          contentContainerStyle={styles.storyStrip}
+          renderItem={({ item: cat }) => (
             <Pressable
-              key={cat.id}
-              style={styles.catCard}
               onPress={() => setSelectedCategory(cat.id)}
               accessibilityRole="button"
               accessibilityLabel={`${cat.id}, ${cat.count} items`}
+              style={({ pressed }) => [styles.storyItem, pressed && { opacity: 0.75 }]}
             >
-              <Image source={{ uri: cat.image }} style={styles.catImage} resizeMode="cover" />
-              <View style={styles.catInfo}>
-                <Text style={styles.catName}>{cat.id}</Text>
-                <Text style={styles.catCount}>{cat.count} items</Text>
+              <View style={styles.storyCircle}>
+                <Image source={{ uri: cat.image }} style={styles.storyImage} resizeMode="cover" />
               </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+              <Text style={styles.storyLabel}>{cat.id}</Text>
             </Pressable>
-          ))}
-        </View>
+          )}
+        />
       )}
 
-      {/* Filter chips */}
+      {/* Hairline — separates navigation from filtering */}
+      {!selectedCategory && <View style={styles.stripDivider} />}
+
+      {/* 2. Filter chips */}
       <FlatList
         data={FILTER_CHIPS}
         horizontal
@@ -150,36 +154,33 @@ export default function ShopScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
-      {/* Purple Header */}
+      {/* White Header */}
       <SafeAreaView style={styles.header} edges={['top']}>
         <View style={styles.headerRow}>
-          {selectedCategory ? (
+          {selectedCategory && (
             <Pressable
               onPress={() => setSelectedCategory(null)}
               style={styles.backBtn}
               accessibilityRole="button"
-              accessibilityLabel={`Back to categories`}
+              accessibilityLabel="Back to categories"
             >
-              <Ionicons name="chevron-back" size={24} color={Colors.textOnPrimary} />
+              <Ionicons name="chevron-back" size={24} color="#1A1A2E" />
             </Pressable>
-          ) : (
-            <View style={{ width: 40 }} />
           )}
           <Text style={styles.headerTitle}>
             {selectedCategory ?? 'Shop'}
           </Text>
-          <View style={{ width: 40 }} />
         </View>
 
         {/* Search bar */}
         <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color="rgba(255,255,255,0.7)" />
+          <Ionicons name="search-outline" size={18} color="#8E8E93" />
           <TextInput
             style={styles.searchInput}
             placeholder="Search jewelry…"
-            placeholderTextColor="rgba(255,255,255,0.6)"
+            placeholderTextColor="#8E8E93"
             value={searchText}
             onChangeText={setSearchText}
             returnKeyType="search"
@@ -193,7 +194,7 @@ export default function ShopScreen() {
               accessibilityRole="button"
               accessibilityLabel="Clear search"
             >
-              <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.7)" />
+              <Ionicons name="close-circle" size={18} color="#8E8E93" />
             </Pressable>
           )}
         </View>
@@ -236,58 +237,92 @@ export default function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: '#FAFAFC' },
+
+  // ── White header ──────────────────────────────────────────────────────────
   header: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: PADDING,
     paddingBottom: 16,
-    gap: 12,
+    gap: 0,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 4,
+    marginBottom: 16,
   },
   backBtn: {
-    width: 40, height: 40,
+    width: 36, height: 36,
     alignItems: 'center', justifyContent: 'center',
+    marginRight: 2,
   },
-  headerTitle: { ...Typography.headlineLarge, color: Colors.textOnPrimary },
+  // Serif left-aligned title — matches Home greeting rail
+  headerTitle: {
+    fontFamily: SerifFonts.serif,
+    fontSize: 28,
+    color: '#1A1A2E',
+    letterSpacing: 0.2,
+  },
+
+  // ── Sleek search bar — mirrors Home Screen ────────────────────────────────
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#F4F4F8',
     borderRadius: 12, height: 44, paddingHorizontal: 16,
   },
   searchInput: {
-    flex: 1, ...Typography.bodyMedium, color: Colors.textOnPrimary,
+    flex: 1,
+    fontFamily: SerifFonts.sans,
+    fontSize: 14,
+    color: '#1A1A2E',
     paddingVertical: 0,
   },
 
   listContent: { paddingBottom: 100 },
 
-  mainCats: { paddingHorizontal: PADDING, paddingTop: Spacing.base, gap: 12 },
-  catCard: {
-    backgroundColor: Colors.surface, borderRadius: 16, padding: 16,
-    flexDirection: 'row', alignItems: 'center', height: 80,
+  // ── Horizontal story strip ────────────────────────────────────────────────
+  storyStrip: { paddingHorizontal: PADDING, paddingVertical: 16 },
+  storyItem: { alignItems: 'center', marginRight: 20 },
+  storyCircle: {
+    width: 72, height: 72, borderRadius: 36,
+    overflow: 'hidden',
+    borderWidth: 1, borderColor: '#E5E5EA',
+    backgroundColor: '#F8F8FA',
   },
-  catImage: { width: 60, height: 60, borderRadius: 8 },
-  catInfo: { flex: 1, marginLeft: 16, gap: 4 },
-  catName: { ...Typography.titleLarge, color: Colors.textPrimary },
-  catCount: { ...Typography.bodyMedium, color: Colors.textSecondary },
+  storyImage: { width: '100%', height: '100%' },
+  storyLabel: {
+    fontFamily: SerifFonts.serif,
+    fontSize: 13,
+    color: '#1A1A2E',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  stripDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#E5E5EA',
+    marginHorizontal: PADDING,
+  },
 
-  filterStrip: { paddingHorizontal: PADDING, paddingVertical: 12, gap: 8 },
+  // ── Filter chips — monochrome, no borders ─────────────────────────────────
+  filterStrip: {
+    paddingHorizontal: PADDING,
+    paddingTop: 24,
+    paddingBottom: 16,
+    gap: 8,
+  },
   filterChip: {
-    height: 36, borderRadius: 8, borderWidth: 1,
-    borderColor: Colors.border, backgroundColor: Colors.surface,
+    height: 36, borderRadius: 8,
+    backgroundColor: '#F4F4F8',
     paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center',
     marginRight: 8,
   },
-  filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  filterText: { ...Typography.labelLarge, color: Colors.textPrimary },
-  filterTextActive: { color: Colors.textOnPrimary },
+  filterChipActive: { backgroundColor: '#1A1A2E' },
+  filterText: { ...Typography.labelLarge, color: '#8E8E93' },
+  filterTextActive: { color: '#FFFFFF', fontWeight: '700' },
 
   sectionTitle: {
-    ...Typography.titleLarge, color: Colors.textPrimary,
+    ...Typography.titleLarge, color: '#1A1A2E',
     paddingHorizontal: PADDING, marginBottom: 8,
   },
 

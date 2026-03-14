@@ -1,8 +1,22 @@
 import React, { useCallback } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Typography } from '../../constants/typography';
 import { Layout } from '../../constants/spacing';
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+// Outline-style icon per category — monochromatic, line-art only
+const CATEGORY_ICONS: Record<string, IoniconName> = {
+  Diamond:   'diamond-outline',
+  Gold:      'sparkles-outline',
+  Silver:    'moon-outline',
+  Rings:     'radio-button-off-outline',
+  Necklaces: 'link-outline',
+  Earrings:  'ellipse-outline',
+  Bracelets: 'git-branch-outline',
+};
 
 interface CategoryChipProps {
   label: string;
@@ -20,6 +34,9 @@ export const CategoryChip = React.memo(function CategoryChip({
     onPress(label);
   }, [label, onPress]);
 
+  const iconName = CATEGORY_ICONS[label];
+  const iconColor = active ? '#FFFFFF' : '#8E8E93';
+
   return (
     <Pressable
       onPress={handlePress}
@@ -28,9 +45,14 @@ export const CategoryChip = React.memo(function CategoryChip({
       accessibilityState={{ selected: active }}
       style={({ pressed }) => [styles.chip, active ? styles.active : styles.inactive, pressed && styles.pressed]}
     >
-      <Text style={[styles.text, active ? styles.activeText : styles.inactiveText]}>
-        {label}
-      </Text>
+      <View style={styles.inner}>
+        {iconName && (
+          <Ionicons name={iconName} size={14} color={iconColor} />
+        )}
+        <Text style={[styles.text, active ? styles.activeText : styles.inactiveText]}>
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 });
@@ -63,5 +85,10 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.9,
     transform: [{ scale: 0.96 }],
+  },
+  inner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 });
