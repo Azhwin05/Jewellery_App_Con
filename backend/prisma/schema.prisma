@@ -1,0 +1,147 @@
+// Prisma schema for Jewelry App backend
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  fullName          String?
+  phone             String?
+  avatarUrl         String?
+  preferences       String[]  @default([])
+  isProfileComplete Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  orders     Order[]
+  addresses  Address[]
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  category      String
+  metalType     String
+  karat         String
+  weightGrams   Float
+  price         Float
+  makingCharges Float
+  gst           Float
+  totalPrice    Float
+  images        String[]
+  has360View    Boolean  @default(false)
+  hasARModel    Boolean  @default(false)
+  glbModelUrl   String?
+  usdzModelUrl  String?
+  hallmark      String
+  inStock       Boolean  @default(true)
+  isNew         Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  tags          String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  shippingAddressId String
+  shippingAddress   Address     @relation(fields: [shippingAddressId], references: [id])
+  paymentMethod     String
+  paymentId         String?
+  subtotal          Float
+  makingCharges     Float
+  gst               Float
+  discount          Float       @default(0)
+  total             Float
+  status            String      @default("pending")
+  estimatedDelivery DateTime?
+  deliverySlot      String?
+  couponCode        String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  statusEvents OrderStatusEvent[]
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id])
+  productId    String
+  product      Product @relation(fields: [productId], references: [id])
+  productName  String
+  productImage String
+  karat        String
+  weightGrams  Float
+  quantity     Int
+  priceAtOrder Float
+  makingCharges Float
+  gst          Float
+  totalPrice   Float
+}
+
+model OrderStatusEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  status    String
+  message   String
+  location  String?
+  timestamp DateTime @default(now())
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  label     String
+  fullName  String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+model MetalRate {
+  id             String   @id @default(cuid())
+  metal          String   // gold_22k, gold_18k, silver
+  pricePerUnit   Float
+  changePercent  Float
+  changeAmount   Float
+  source         String   @default("MCX")
+  fetchedAt      DateTime @default(now())
+
+  @@index([metal, fetchedAt])
+}
